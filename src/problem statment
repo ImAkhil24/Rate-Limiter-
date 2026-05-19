@@ -1,0 +1,46 @@
+You are building the backend for a banking application.
+
+Users can request an OTP to reset their password.
+
+Problem:
+Some users — or attackers — may spam the “Send OTP” button thousands of times:
+
+* overloading the OTP service
+* increasing SMS/email costs
+* annoying users
+* enabling abuse attacks
+
+To protect the system, the bank decides:
+
+```text id="jup2kt"
+A user can request at most 3 OTPs within 5 minutes.
+```
+
+If the user exceeds the limit:
+
+* the backend should reject the request
+* and ask the user to try again later
+
+Implement:
+
+```java id="6b0s4j"
+class RateLimiter {
+    boolean allowRequest(String userId)
+}
+```
+
+Behavior:
+
+* Return `true` if OTP request is allowed
+* Return `false` if request should be blocked
+
+Example:
+
+```text id="lmhoq0"
+allowRequest("akhil") -> true
+allowRequest("akhil") -> true
+allowRequest("akhil") -> true
+allowRequest("akhil") -> false
+```
+
+After 5 minutes, the user should again be able to request OTPs.
