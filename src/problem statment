@@ -44,3 +44,55 @@ allowRequest("akhil") -> false
 ```
 
 After 5 minutes, the user should again be able to request OTPs.
+
+
+Version 2
+
+The banking application becomes very successful.
+
+Initially, the OTP service handled only a few hundred users, so the existing rate limiter worked fine.
+
+But after launch, traffic increased massively:
+
+```text id="m8i76q"
+~1 million OTP requests per hour
+```
+
+Engineers observed that the current implementation became slow under load.
+
+Problem in current design:
+For every incoming OTP request, the system scans a large queue containing requests from all users.
+
+Example:
+
+```text id="jodw5t"
+Queue size = 500,000 requests
+```
+
+Even if:
+
+```text id="m7n6v3"
+User "akhil" has only 2 requests
+```
+
+the backend still scans the entire queue.
+
+This increased:
+
+* request latency
+* CPU usage
+* memory pressure
+
+The bank wants a more scalable design where checking one user's requests does not depend on requests from other users.
+
+Your task:
+Redesign the rate limiter to efficiently support millions of users.
+
+The API remains the same:
+
+```java id="ns4m5m"
+class RateLimiter {
+    boolean allowRequest(String userId)
+}
+```
+
