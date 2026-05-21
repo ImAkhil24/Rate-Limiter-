@@ -95,4 +95,43 @@ class RateLimiter {
     boolean allowRequest(String userId)
 }
 ```
+V3
+
+The banking system is now deployed globally.
+
+Traffic has grown significantly:
+
+```text id="6c6gzt"
+~50 million OTP requests daily
+```
+
+Although the new implementation improved user lookup speed, engineers discovered another bottleneck.
+
+Current problem:
+Every incoming request still triggers cleanup on a large global queue containing requests from all users.
+
+Example:
+
+```text id="s7i4yo"
+A user from India requests an OTP
+→ backend still scans expired requests from users worldwide
+```
+
+During traffic spikes, cleanup operations started increasing:
+
+* CPU consumption
+* garbage collection pressure
+* request latency
+
+The platform team wants a more isolated design where:
+
+* each user's request history is managed independently
+* cleanup for one user does not depend on global traffic
+
+Your task:
+Redesign the rate limiter to reduce global cleanup overhead while still enforcing:
+
+```text id="vfz73x"
+Maximum 3 OTP requests per user within 5 minutes
+```
 

@@ -26,13 +26,11 @@ class Request {
 
 public class RateLimiter {
     // maintain the 5 minutes time frame
-    Queue<Request> requestQueue= new LinkedList<>();
-    Map<String, Integer> globalCount = new HashMap<String, Integer>();
+    Map<String, Queue<Request>> requestQueue = new HashMap<>();
 
-    void purgeRequests(Instant now) {
+    void purgeRequests(Instant now, Queue<Request> requestQueue) {
         while(!requestQueue.isEmpty()) {
             if(Duration.between(requestQueue.peek().time, now).toMinutes() >= 5) {
-                globalCount.put(requestQueue.peek().userId,globalCount.get(requestQueue.peek().userId) - 1);
                 requestQueue.poll();
             } else {
                 break;
@@ -43,13 +41,20 @@ public class RateLimiter {
     boolean allowRequest(String userId) {
         Instant now = Instant.now();
         System.out.println(now);
-        purgeRequests(now);
-        Integer counter = globalCount.getOrDefault(userId, 0);
+        Queue<Request> userQueue = requestQueue.get(userId);
+        if(userQueue != null) {
+            purgeRequests(now, userQueue);
+        } else {
+            userQueue = new LinkedList<>();
+        }
+
+        // after that count is needed
+        Integer counter = userQueue.size();
 
         System.out.println(counter);
         if(counter >= 3) return false;
-        requestQueue.add(new Request(userId, now));
-        globalCount.put(userId, globalCount.getOrDefault(userId, 0) + 1);
+        userQueue.add(new Request(userId, now));
+        requestQueue.put(userId, userQueue);
         return true;
     }
 
