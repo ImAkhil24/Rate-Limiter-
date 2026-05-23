@@ -135,3 +135,60 @@ Redesign the rate limiter to reduce global cleanup overhead while still enforcin
 Maximum 3 OTP requests per user within 5 minutes
 ```
 
+The banking platform is now handling extremely high traffic during peak hours.
+
+To improve performance, the backend servers process OTP requests concurrently using multiple threads.
+
+Current problem:
+
+Your current rate limiter works correctly in single-threaded scenarios, but engineers discovered inconsistent behavior under concurrent traffic.
+
+Example:
+
+```text id="y0z8r2"
+User currently has 2 OTP requests in last 5 minutes.
+```
+
+Now two requests arrive at the exact same time:
+
+```text id="4kwjlwm"
+Thread A checks count → sees 2
+Thread B checks count → sees 2
+```
+
+Both threads allow the request simultaneously.
+
+Result:
+
+```text id="kw7j1p"
+User ends up making 4 OTP requests
+even though limit is 3.
+```
+
+This caused:
+
+* incorrect rate limiting
+* race conditions
+* inconsistent production behavior under load
+
+The platform team now wants the rate limiter to be safe under concurrent access.
+
+Requirements:
+
+* multiple threads may call `allowRequest()` simultaneously
+* rate limiting must remain correct
+* data corruption should not occur
+
+Rate limiting rule remains:
+
+```text id="vfz73x"
+Maximum 3 OTP requests per user within 5 minutes
+```
+
+Implement a thread-safe version of:
+
+```java id="jlwm83"
+class RateLimiter {
+    boolean allowRequest(String userId)
+}
+```

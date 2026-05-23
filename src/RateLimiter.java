@@ -38,7 +38,7 @@ public class RateLimiter {
         }
     }
 
-    boolean allowRequest(String userId) {
+    synchronized boolean allowRequest(String userId) {
         Instant now = Instant.now();
         System.out.println(now);
         Queue<Request> userQueue = requestQueue.get(userId);
@@ -50,6 +50,11 @@ public class RateLimiter {
 
         // after that count is needed
         Integer counter = userQueue.size();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         System.out.println(counter);
         if(counter >= 3) return false;
@@ -62,7 +67,18 @@ public class RateLimiter {
         RateLimiter rate = new RateLimiter();
         System.out.println(rate.allowRequest("akhil"));
         System.out.println(rate.allowRequest("akhil"));
-        System.out.println(rate.allowRequest("akhil"));
-        System.out.println(rate.allowRequest("akhil"));
+
+        Thread t1 = new Thread(() -> {
+            System.out.println(rate.allowRequest("akhil"));
+        });
+
+        Thread t2 = new Thread(()-> {
+            System.out.println(rate.allowRequest("akhil"));
+        });
+
+        t1.start();
+        t2.start();
+
+
     }
 }
