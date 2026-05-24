@@ -192,3 +192,58 @@ class RateLimiter {
     boolean allowRequest(String userId)
 }
 ```
+
+The banking platform successfully fixed the race condition using synchronization.
+
+However, after deployment under real production traffic, engineers discovered a new scalability problem.
+
+Current implementation:
+
+```java id="’wini304"
+synchronized boolean allowRequest(...)
+```
+
+Problem:
+The entire `RateLimiter` object is locked for every request.
+
+Example:
+
+```text id="’wini305"
+User "akhil" requesting OTP
+AND
+User "rahul" requesting OTP
+```
+
+Even though they are completely unrelated users, one request blocks the other.
+
+During traffic spikes:
+
+```text id="’wini306"
+thousands of threads
+→ waiting for same global lock
+```
+
+This caused:
+
+* reduced throughput
+* increased latency
+* thread contention
+* poor CPU utilization
+
+The platform team now wants a more scalable concurrent design.
+
+New Requirements:
+
+* requests for different users should run concurrently
+* requests for the SAME user must still remain thread-safe
+* race conditions must not occur
+
+Rate limiting rule remains:
+
+```text id="vfz73x"
+Maximum 3 OTP requests per user within 5 minutes
+```
+
+Your task:
+Redesign the synchronization strategy to reduce unnecessary blocking while maintaining correctness.
+

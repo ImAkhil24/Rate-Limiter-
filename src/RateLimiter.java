@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 // atmost 3 top request in 5 minutes
@@ -21,6 +22,20 @@ class Request {
     Request(String userId, Instant time) {
         this.userId = userId;
         this.time = time;
+    }
+}
+
+class RateLimiterInit {
+    ConcurrentHashMap<String, RateLimiter> rateLimiter= new ConcurrentHashMap<>();
+
+    RateLimiter getRateLimiter(String userId) {
+        RateLimiter limiter =
+                rateLimiter.computeIfAbsent(
+                        userId,
+                        k -> new RateLimiter()
+                );
+
+        return limiter;
     }
 }
 
@@ -50,11 +65,11 @@ public class RateLimiter {
 
         // after that count is needed
         Integer counter = userQueue.size();
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         System.out.println(counter);
         if(counter >= 3) return false;
@@ -64,16 +79,17 @@ public class RateLimiter {
     }
 
     public static void main(String[] args) {
-        RateLimiter rate = new RateLimiter();
-        System.out.println(rate.allowRequest("akhil"));
-        System.out.println(rate.allowRequest("akhil"));
+        RateLimiterInit rateInit = new RateLimiterInit();
+
+        System.out.println(rateInit.getRateLimiter("akhil").allowRequest("akhil"));
+        System.out.println(rateInit.getRateLimiter("akhil").allowRequest("akhil"));
 
         Thread t1 = new Thread(() -> {
-            System.out.println(rate.allowRequest("akhil"));
+            System.out.println(rateInit.getRateLimiter("akhil").allowRequest("akhil"));
         });
 
         Thread t2 = new Thread(()-> {
-            System.out.println(rate.allowRequest("akhil"));
+            System.out.println(rateInit.getRateLimiter("akhil").allowRequest("akhil"));
         });
 
         t1.start();
