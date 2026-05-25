@@ -3,6 +3,8 @@ import java.time.Instant;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class Request {
 
@@ -82,35 +84,29 @@ public class Main {
         RateLimiterManager manager =
                 new RateLimiterManager();
 
-        System.out.println(
-                manager.getRateLimiter("akhil")
-                        .allowRequest()
-        );
 
-        System.out.println(
-                manager.getRateLimiter("akhil")
-                        .allowRequest()
-        );
+        ExecutorService pool = Executors.newFixedThreadPool(10);
 
-        Thread t1 = new Thread(() -> {
+        pool.submit(() -> {
+            System.out.println(manager.getRateLimiter("akhil")
+                    .allowRequest());
+        });
 
-            System.out.println(
-                    manager.getRateLimiter("akhil")
-                            .allowRequest()
-            );
+        pool.submit(() -> {
+            System.out.println(manager.getRateLimiter("akhil")
+                    .allowRequest());
+        });
 
-        }, "Thread-1");
+        pool.submit(() -> {
+            System.out.println(manager.getRateLimiter("akhil")
+                    .allowRequest());
+        });
 
-        Thread t2 = new Thread(() -> {
+        pool.submit(() -> {
+            System.out.println(manager.getRateLimiter("akhil")
+                    .allowRequest());
+        });
 
-            System.out.println(
-                    manager.getRateLimiter("akhil")
-                            .allowRequest()
-            );
-
-        }, "Thread-2");
-
-        t1.start();
-        t2.start();
+        pool.shutdown();
     }
 }

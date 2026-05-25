@@ -247,3 +247,49 @@ Maximum 3 OTP requests per user within 5 minutes
 Your task:
 Redesign the synchronization strategy to reduce unnecessary blocking while maintaining correctness.
 
+
+The banking platform’s rate limiter is now thread-safe and scalable per user.
+
+However, engineers noticed another issue during traffic spikes.
+
+Current implementation:
+For every incoming request, the backend creates a brand new Java thread manually.
+
+Example:
+
+```java
+Thread t = new Thread(() -> {
+    manager.getRateLimiter(userId)
+           .allowRequest();
+});
+
+t.start();
+```
+
+Under real production traffic:
+
+```text
+100,000+ OTP requests/minute
+```
+
+the system started creating an enormous number of threads.
+
+This caused:
+
+* high memory consumption
+* excessive CPU context switching
+* thread scheduling overhead
+* JVM instability under load
+
+The platform team wants a more realistic backend processing model.
+
+New Requirements:
+
+* requests should still be processed concurrently
+* system should NOT create unlimited threads
+* a fixed set of reusable worker threads should process incoming requests
+
+Your task:
+Redesign the request processing approach to use a thread pool instead of manually creating threads for every request.
+
+
